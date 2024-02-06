@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("application")
+    kotlin("jvm") version "1.9.22"
 }
 
 repositories {
@@ -11,6 +12,7 @@ dependencies {
     implementation(files("lib/tai-e-assignment.jar"))
     implementation(files("../../lib/dependencies.jar"))
     testImplementation("junit:junit:4.13")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 application {

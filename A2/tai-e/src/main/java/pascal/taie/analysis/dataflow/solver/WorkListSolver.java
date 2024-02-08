@@ -37,14 +37,11 @@ class WorkListSolver<Node, Fact> extends Solver<Node, Fact> {
     @Override
     protected void doSolveForward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         var worklist = new LinkedList<Node>();
-        var entry = cfg.getEntry();
         for (var node: cfg) {
-            if (node != entry) {
-                worklist.add(node);
-            }
+            worklist.addLast(node);
         }
         while (!worklist.isEmpty()) {
-            var node = worklist.pop();
+            var node = worklist.removeFirst();
             System.out.println("analyzing " + node
             + "\npred: " + cfg.getPredsOf(node)
             + "\nsucc: " + cfg.getSuccsOf(node)

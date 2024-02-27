@@ -76,37 +76,63 @@ public class InterConstantPropagation extends
 
     @Override
     protected boolean transferCallNode(Stmt stmt, CPFact in, CPFact out) {
-        // TODO - finish me
-        return false;
+        CPFact oldOut = out.copy();
+        out.copyFrom(in);
+        return !oldOut.equals(out);
     }
 
     @Override
     protected boolean transferNonCallNode(Stmt stmt, CPFact in, CPFact out) {
-        // TODO - finish me
-        return false;
+        return cp.transferNode(stmt, in, out);
     }
 
     @Override
     protected CPFact transferNormalEdge(NormalEdge<Stmt> edge, CPFact out) {
-        // TODO - finish me
-        return null;
+        return out.copy();
     }
 
     @Override
     protected CPFact transferCallToReturnEdge(CallToReturnEdge<Stmt> edge, CPFact out) {
-        // TODO - finish me
-        return null;
+        if (!(edge.getSource() instanceof Invoke)) {
+            System.exit(1);
+        }
+        var invoke = (Invoke)(edge.getSource());
+        var res = invoke.getResult();
+        if (res == null) {
+            return out.copy();
+        } else {
+            var newIn = out.copy();
+            newIn.remove(res);
+            return newIn;
+        }
     }
 
     @Override
     protected CPFact transferCallEdge(CallEdge<Stmt> edge, CPFact callSiteOut) {
-        // TODO - finish me
-        return null;
+        var srcInvokeStmt = (Invoke)(edge.getSource());
+        var args = srcInvokeStmt.getInvokeExp().getArgs();
+        var callee = edge.getCallee();
+        var params = callee.getIR().getParams();
+        var entryIn = new CPFact();
+        for (int i = 0; i < params.size(); i++) {
+            entryIn.update(params.get(i), callSiteOut.get(args.get(i)));
+        }
+        return entryIn;
     }
 
     @Override
     protected CPFact transferReturnEdge(ReturnEdge<Stmt> edge, CPFact returnOut) {
-        // TODO - finish me
-        return null;
+        var returnSiteIn = new CPFact();
+        var callSite = (Invoke)edge.getCallSite();
+        if (callSite.getResult() == null) {
+            return returnSiteIn;
+        }
+        var receiver = callSite.getResult();
+        var tmpFact = new CPFact();
+        for (var retVar: edge.getReturnVars()) {
+            tmpFact.update(receiver, returnOut.get(retVar));
+            meetInto(tmpFact, returnSiteIn);
+        }
+        return returnSiteIn;
     }
 }

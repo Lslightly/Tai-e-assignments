@@ -26,8 +26,7 @@ import pascal.taie.analysis.dataflow.fact.DataflowResult;
 import pascal.taie.analysis.graph.icfg.ICFG;
 import pascal.taie.util.collection.SetQueue;
 
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -59,10 +58,51 @@ class InterSolver<Method, Node, Fact> {
     }
 
     private void initialize() {
-        // TODO - finish me
+        var entryNodeForEntryMethod = getEntryMethodsEntryNodes();
+        for (var entryNode: entryNodeForEntryMethod) {
+            result.setInFact(entryNode, analysis.newInitialFact());
+            result.setOutFact(entryNode, analysis.newBoundaryFact(entryNode));
+        }
+        for (var node: icfg) {
+            if (!entryNodeForEntryMethod.contains(node)) {
+                result.setInFact(node, analysis.newInitialFact());
+                result.setOutFact(node, analysis.newInitialFact());
+            }
+        }
+    }
+
+    private HashSet<Node> getEntryMethodsEntryNodes() {
+        var entryNodeSet = new HashSet<Node>();
+        icfg.entryMethods().forEach((entry) -> {
+            entryNodeSet.add(icfg.getEntryOf(entry));
+        });
+        return entryNodeSet;
     }
 
     private void doSolve() {
-        // TODO - finish me
+        workList = new LinkedList<>();
+        workList.addAll(icfg.getNodes());
+        while (!workList.isEmpty()) {
+            var top = workList.remove();
+            System.out.println("get " + top);
+
+            // reset in fact
+            for (var inEdge: icfg.getInEdgesOf(top)) {
+                var inNode = inEdge.getSource();
+                var infact = analysis.transferEdge(inEdge, result.getOutFact(inNode));
+                analysis.meetInto(infact, result.getInFact(top));
+            }
+            // transfer node
+            var changed = analysis.transferNode(top, result.getInFact(top), result.getOutFact(top));
+            System.out.println("transfer node for " + top + " " + changed
+                    + " with\nin: " + result.getInFact(top)
+                    + "\nout: " + result.getOutFact(top));
+
+            // push succ if changed
+            if (changed) {
+                System.out.println("pushed " + icfg.getSuccsOf(top));
+                workList.addAll(icfg.getSuccsOf(top));
+            }
+        }
     }
 }

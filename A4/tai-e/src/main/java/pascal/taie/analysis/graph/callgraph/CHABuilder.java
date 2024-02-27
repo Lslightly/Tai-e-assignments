@@ -55,14 +55,15 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
             var m = workList.removeFirst();
             if (!callGraph.contains(m)) {
                 callGraph.addReachableMethod(m);
-                var css = callGraph.callSitesIn(m);
-                css.forEach((cs) -> {
+                var css = callGraph.getCallSitesIn(m);
+                for (var cs: css) {
+//                    System.out.println("\n"+m.getName() + " -> " + cs);
                     var T = resolve(cs);
-                    T.forEach((tm) -> {
+                    for (var tm: T) {
                         callGraph.addEdge(new Edge<>(CallGraphs.getCallKind(cs), cs, tm));
                         workList.addLast(tm);
-                    });
-                });
+                    }
+                }
             }
         }
         return callGraph;
@@ -72,7 +73,7 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
      * Resolves call targets (callees) of a call site via CHA.
      */
     private Set<JMethod> resolve(Invoke callSite) {
-        var T = new TreeSet<JMethod>();
+        var T = new HashSet<JMethod>();
         var mref = callSite.getMethodRef();
         var subsignature = mref.getSubsignature();
         var cm = mref.getDeclaringClass();
@@ -80,14 +81,23 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
             case STATIC:
                 T.add(cm.getDeclaredMethod(subsignature));
                 break;
-            case SPECIAL:
-                T.add(dispatch(cm, subsignature));
+            case SPECIAL: {
+                var m = dispatch(cm, subsignature);
+                if (m == null) {
+                    System.out.println("dispatch does not find method for special call"+callSite);
+                    System.exit(2);
+                }
+                T.add(m);
                 break;
+            }
             case INTERFACE:
             case VIRTUAL: {
                 var subclasses = getSubClasses(cm);
                 for (var c: subclasses) {
-                    T.add(dispatch(c, subsignature));
+                    var m = dispatch(c, subsignature);
+                    if (m != null) {
+                        T.add(m);
+                    }
                 }
                 break;
             }
@@ -96,15 +106,16 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
                 System.exit(1);
             }
         }
+//        System.out.println("resolve result is "+T);
         return T;
     }
 
     /**
-     * @param c
+     * @param c the class to get sub class
      * @return get subclasses of `c` including `c` itself
      */
     private Set<JClass> getSubClasses(JClass c) {
-        var subclasses = new TreeSet<JClass>();
+        var subclasses = new HashSet<JClass>();
         var workList = new LinkedList<JClass>();
         workList.addLast(c);
         while (!workList.isEmpty()) {
@@ -117,6 +128,7 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
                 workList.addAll(hierarchy.getDirectSubclassesOf(top));
             }
         }
+//        System.out.println("subclasses of " + c.getName() + " is " + subclasses);
         return subclasses;
     }
 
@@ -135,6 +147,7 @@ class CHABuilder implements CGBuilder<Invoke, JMethod> {
                 return dispatch(jclass.getSuperClass(), subsignature);
             }
         }
+//        System.out.println("the actual method for " + jclass.getName() + ":" + subsignature + " is " + m);
         return m;
     }
 }

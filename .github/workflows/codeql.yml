@@ -79,14 +79,25 @@ jobs:
       
     - run: |
         echo "Run, Build Application using script"
+    - name: A1
+      run: |
         cd A1/tai-e
-        gradlew compileJava
+        ./gradlew compileJava
+        
+    - name: A2
+      run: |
         cd A2/tai-e
-        gradlew compileJava
+        ./gradlew compileJava
+        
+    - name: A3
+      run: |
         cd A3/tai-e
-        gradlew compileJava
+        ./gradlew compileJava
+        
+    - name: A4
+      run: |
         cd A4/tai-e
-        gradlew compileJava
+        ./gradlew compileJava
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

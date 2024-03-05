@@ -76,6 +76,12 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
+
+    - name: SetUp JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'corretto' # See 'Supported distributions' for available options
+        java-version: '17'
       
     - run: |
         echo "Run, Build Application using script"

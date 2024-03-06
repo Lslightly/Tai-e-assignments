@@ -70,6 +70,20 @@ class Solver {
     }
 
     /**
+     * we need to handle these stmts:
+     *  x = new T
+     *  x = y
+     *  x.f = y
+     *  T.f = y
+     *  y = x.f
+     *  y = T.f
+     *  x[i] = y
+     *  y = x[i]
+     *  x = o.m
+     *  x = T.m
+     */
+
+    /**
      * Runs pointer analysis algorithm.
      */
     void solve() {
@@ -94,9 +108,22 @@ class Solver {
 
     /**
      * Processes new reachable method.
+     *
+     * need to handle stmt in loc l
+     *  x = new T
+     *  x = y
+     *  T.f = y
+     *  y = T.f
+     *  x = T.m
      */
     private void addReachable(JMethod method) {
-        // TODO - finish me
+        if (callGraph.contains(method)) {
+            return ;
+        }
+        callGraph.addReachableMethod(method);
+        for (var stmt: method.getIR().getStmts()) {
+            stmt.accept(stmtProcessor);
+        }
     }
 
     /**
@@ -105,6 +132,13 @@ class Solver {
     private class StmtProcessor implements StmtVisitor<Void> {
         // TODO - if you choose to implement addReachable()
         //  via visitor pattern, then finish me
+        public Void visit(New stmt) {
+            var v = stmt.getLValue();
+            var obj = heapModel.getObj(stmt);
+            workList.addEntry(new VarPtr(v), new PointsToSet(obj));
+            return null;
+        }
+
     }
 
     /**

@@ -161,7 +161,7 @@ public class ResultProcessor {
             String given = toString(pointer.getPointsToSet());
             String expected = inputs.get(pointerStr);
             if (!given.equals(expected)) {
-                mismatches.add(String.format("%s, expected: %s, given: %s",
+                mismatches.add(String.format("%s,\n\texpected: %s,\n\tgiven: %s",
                         pointerStr, expected, given));
             }
         });
@@ -170,7 +170,7 @@ public class ResultProcessor {
                 .filter(Predicate.not(pointers::containsKey))
                 .forEach(pointerStr -> {
                     String expected = inputs.get(pointerStr);
-                    mismatches.add(String.format("%s, expected: %s, given: null",
+                    mismatches.add(String.format("%s,\n\texpected: %s,\n\tgiven: null",
                             pointerStr, expected));
                 });
         if (!mismatches.isEmpty()) {

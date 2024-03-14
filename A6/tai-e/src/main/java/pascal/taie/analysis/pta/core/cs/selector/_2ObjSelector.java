@@ -31,6 +31,9 @@ import pascal.taie.analysis.pta.core.cs.element.CSObj;
 import pascal.taie.analysis.pta.core.heap.Obj;
 import pascal.taie.language.classes.JMethod;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 /**
  * Implementation of 2-object sensitivity.
  */
@@ -48,16 +51,15 @@ public class _2ObjSelector implements ContextSelector {
 
     @Override
     public Context selectContext(CSCallSite callSite, CSObj recv, JMethod callee) {
-        if (callSite.getContext().getLength() == 0) {
+        var recvCtx = recv.getContext();
+        if (recvCtx.getLength() == 0) {
             return ListContext.make(recv.getObject());
+        } else {
+            return ListContext.make(
+                recvCtx.getElementAt(recvCtx.getLength()-1),
+                recv.getObject()
+            );
         }
-        var lastElem = callSite.getContext().getElementAt(
-            callSite.getContext().getLength()-1
-        );
-        if (recv.getObject() == lastElem) {
-            return callSite.getContext();
-        }
-        return ListContext.make(lastElem, recv.getObject());
     }
 
     @Override

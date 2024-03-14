@@ -290,9 +290,15 @@ class Solver {
             var m = resolveCallee(recvObj, invoke);
             var currCtx = recv.getContext();
             var csCallSite = csManager.getCSCallSite(currCtx, invoke);
+
             var calleeCtx = contextSelector.selectContext(csCallSite, recvObj, m);
             var csCallee = csManager.getCSMethod(calleeCtx, m);
+
             workList.addEntry(csManager.getCSVar(calleeCtx, m.getIR().getThis()), PointsToSetFactory.make(recvObj));
+
+            // System.out.println("new context "+calleeCtx+":::for @invoke: "+invoke
+            //        +"\nby selectContext("+csCallSite+", "+recvObj+"\n");
+
             if (callGraph.addEdge(new Edge<>(CallGraphs.getCallKind(invoke), csCallSite, csCallee))) {
                 addReachable(csCallee);
                 for (int i = 0; i < m.getParamCount(); i++) {

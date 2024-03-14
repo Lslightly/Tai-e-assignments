@@ -49,12 +49,15 @@ public class _2ObjSelector implements ContextSelector {
     @Override
     public Context selectContext(CSCallSite callSite, CSObj recv, JMethod callee) {
         if (callSite.getContext().getLength() == 0) {
-            return ListContext.make(recv);
+            return ListContext.make(recv.getObject());
         }
         var lastElem = callSite.getContext().getElementAt(
             callSite.getContext().getLength()-1
         );
-        return ListContext.make(lastElem, recv);
+        if (recv.getObject() == lastElem) {
+            return callSite.getContext();
+        }
+        return ListContext.make(lastElem, recv.getObject());
     }
 
     @Override

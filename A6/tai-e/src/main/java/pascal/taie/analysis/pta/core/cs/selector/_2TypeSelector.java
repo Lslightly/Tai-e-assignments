@@ -54,11 +54,14 @@ public class _2TypeSelector implements ContextSelector {
         var lastElem = callSite.getContext().getElementAt(
             callSite.getContext().getLength()-1
         );
+        if (lastElem == recv.getObject().getContainerType()) {
+            return ListContext.make(lastElem);
+        }
         return ListContext.make(lastElem, recv.getObject().getContainerType());
     }
 
     @Override
     public Context selectHeapContext(CSMethod method, Obj obj) {
-        return ListContext.make(obj.getContainerType());
+        return ListContext.make(method.getMethod().getDeclaringClass().getType());
     }
 }
